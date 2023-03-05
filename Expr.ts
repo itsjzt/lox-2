@@ -9,7 +9,7 @@ export interface Visitor<T> {
 
 export class Expr {
   // deno-lint-ignore no-explicit-any
-  accept<R>(_visitor: Visitor<R>): any {}
+  accept<R = any>(_visitor: Visitor<R>): any {}
 }
 
 export class Binary extends Expr {

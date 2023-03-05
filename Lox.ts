@@ -3,10 +3,14 @@ import { Scanner } from "./Scanner.ts";
 import { Token } from "./Token.ts";
 import { TokenType } from "./TokenType.ts";
 import { AstPrinter } from "./AstPrinter.ts";
+import { RuntimeError } from "./Error.ts";
+import { Interpreter } from "./Interpreter.ts";
+
+let hadError = false;
+let hasRuntimeError = false;
+let interpreter = new Interpreter();
 
 export class Lox {
-  hadError = false;
-
   main() {
     const args = Deno.args;
 
@@ -30,7 +34,7 @@ export class Lox {
         break;
       }
 
-      this.hadError = false;
+      hadError = false;
       this.run(input);
     }
   }
@@ -40,8 +44,11 @@ export class Lox {
     const rawBinary = await Deno.readFile(filePath);
 
     this.run(decoder.decode(rawBinary));
-    if (this.hadError) {
+    if (hadError) {
       Deno.exit(65);
+    }
+    if (hasRuntimeError) {
+      Deno.exit(70);
     }
   }
 
@@ -52,13 +59,15 @@ export class Lox {
     const expression = parser.parse();
 
     if (!expression) return console.log("No expression");
-    const prettyPrintedAst = new AstPrinter().toString(expression);
-    console.log(prettyPrintedAst);
+    interpreter.interpret(expression);
+
+    // const prettyPrintedAst = new AstPrinter().toString(expression);
+    // console.log(prettyPrintedAst);
   }
 
   error(line: number, message: string) {
     Lox.report(line, "", message);
-    this.hadError = true;
+    hadError = true;
   }
 
   static errorStatic(token: Token, message: string) {
@@ -67,6 +76,12 @@ export class Lox {
     } else {
       this.report(token.line, " at " + token.lexeme + " ", message);
     }
+    hadError = true;
+  }
+
+  static runtimeError(e: RuntimeError) {
+    console.error(e.message + "\n[line " + e.token.line + "]");
+    hasRuntimeError = true;
   }
 
   static report(line: number, where: string, message: string) {
