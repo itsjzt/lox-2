@@ -127,7 +127,6 @@ export class Scanner {
           this.identifier();
         } else {
           console.log(this.line, "Unexpected character", c);
-          Deno.exit(65);
         }
       }
     }
@@ -187,18 +186,22 @@ export class Scanner {
   }
 
   number() {
-    let str = "";
     while (this.isDigit(this.peek())) {
-      str += this.advance();
+      this.advance();
     }
 
     // handle fractions
     if (this.peek() === "." && this.isDigit(this.peekNext())) {
       // consume the .
-      str += this.advance() + this.number();
+      this.advance();
+
+      while (this.isDigit(this.peek())) {
+        this.advance();
+      }
     }
 
-    this.addToken(TokenType.NUMBER, parseFloat(str));
+    const number = parseFloat(this.source.substring(this.start, this.current));
+    this.addToken(TokenType.NUMBER, number);
   }
 
   peekNext() {
@@ -244,15 +247,19 @@ export class Scanner {
   }
 
   advance() {
-    return this.source.charAt(this.current++);
+    const char = this.source.charAt(this.current);
+    this.current++;
+
+    return char;
   }
 
+  // deno-lint-ignore no-explicit-any
   addToken(type: TokenType, literal?: any) {
     const text = this.source.substring(this.start, this.current);
     this.tokens.push(new Token(type, text, literal || null, this.line));
   }
 
   isAtEnd() {
-    return this.current > this.source.length;
+    return this.current >= this.source.length;
   }
 }

@@ -1,4 +1,8 @@
+import { Parser } from "./Parser.ts";
 import { Scanner } from "./Scanner.ts";
+import { Token } from "./Token.ts";
+import { TokenType } from "./TokenType.ts";
+import { AstPrinter } from "./AstPrinter.ts";
 
 export class Lox {
   hadError = false;
@@ -20,9 +24,7 @@ export class Lox {
 
   runPrompt() {
     while (true) {
-      const input = prompt(">");
-
-      console.log({ input });
+      const input = prompt("Lox >");
 
       if (input === null) {
         break;
@@ -46,18 +48,28 @@ export class Lox {
   run(source: string) {
     const scanner = new Scanner(source);
     const tokens = scanner.scanLines();
+    const parser = new Parser(tokens);
+    const expression = parser.parse();
 
-    for (const token of tokens) {
-      console.log(token);
-    }
+    if (!expression) return console.log("No expression");
+    const prettyPrintedAst = new AstPrinter().toString(expression);
+    console.log(prettyPrintedAst);
   }
 
   error(line: number, message: string) {
-    this.report(line, "", message);
+    Lox.report(line, "", message);
+    this.hadError = true;
   }
 
-  report(line: number, where: string, message: string) {
+  static errorStatic(token: Token, message: string) {
+    if (token.type === TokenType.EOF) {
+      this.report(token.line, "at end", message);
+    } else {
+      this.report(token.line, " at " + token.lexeme + " ", message);
+    }
+  }
+
+  static report(line: number, where: string, message: string) {
     console.error("[line " + line + "] Error" + where + ": " + message);
-    this.hadError = true;
   }
 }

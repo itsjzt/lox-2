@@ -1,18 +1,21 @@
 import { Token } from "./Token.ts";
 
 export interface Visitor<T> {
-  visitBinaryExpr: (expr: Binary) => T
-  visitGroupingExpr: (expr: Grouping) => T
-  visitLiteralExpr: (expr: Literal) => T
-  visitUnaryExpr: (expr: Unary) => T
+  visitBinaryExpr: (expr: Binary) => T;
+  visitGroupingExpr: (expr: Grouping) => T;
+  visitLiteralExpr: (expr: Literal) => T;
+  visitUnaryExpr: (expr: Unary) => T;
 }
 
-class Expr {
+export class Expr {
+  // deno-lint-ignore no-explicit-any
   accept<R>(_visitor: Visitor<R>): any {}
 }
 
 export class Binary extends Expr {
-  left: Expr; operator: Token; right: Expr;
+  left: Expr;
+  operator: Token;
+  right: Expr;
 
   constructor(left: Expr, operator: Token, right: Expr) {
     super();
@@ -22,7 +25,7 @@ export class Binary extends Expr {
   }
 
   accept<R>(visitor: Visitor<R>) {
-    return visitor.visitBinaryExpr(this); 
+    return visitor.visitBinaryExpr(this);
   }
 }
 
@@ -35,25 +38,28 @@ export class Grouping extends Expr {
   }
 
   accept<R>(visitor: Visitor<R>) {
-    return visitor.visitGroupingExpr(this); 
+    return visitor.visitGroupingExpr(this);
   }
 }
 
 export class Literal extends Expr {
+  // deno-lint-ignore no-explicit-any
   value: any;
 
+  // deno-lint-ignore no-explicit-any
   constructor(value: any) {
     super();
     this.value = value;
   }
 
   accept<R>(visitor: Visitor<R>) {
-    return visitor.visitLiteralExpr(this); 
+    return visitor.visitLiteralExpr(this);
   }
 }
 
 export class Unary extends Expr {
-  operator: Token; right: Expr;
+  operator: Token;
+  right: Expr;
 
   constructor(operator: Token, right: Expr) {
     super();
@@ -62,7 +68,6 @@ export class Unary extends Expr {
   }
 
   accept<R>(visitor: Visitor<R>) {
-    return visitor.visitUnaryExpr(this); 
+    return visitor.visitUnaryExpr(this);
   }
 }
-
